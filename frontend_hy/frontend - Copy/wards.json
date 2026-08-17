@@ -1,0 +1,8 @@
+[
+  { "id": "W12", "area": "Dwaraka Nagar", "ward": "Ward 12", "status": "safe", "pressure": 5.2, "leakRisk": "low", "lastUpdated": "2026-07-31T08:15:00", "lat": 17.7215, "lng": 83.3016 },
+  { "id": "W18", "area": "MVP Colony", "ward": "Ward 18", "status": "critical", "pressure": 3.1, "leakRisk": "high", "lastUpdated": "2026-07-31T08:22:00", "lat": 17.7326, "lng": 83.3245 },
+  { "id": "W07", "area": "Gajuwaka", "ward": "Ward 07", "status": "safe", "pressure": 4.9, "leakRisk": "low", "lastUpdated": "2026-07-31T08:10:00", "lat": 17.6868, "lng": 83.2185 },
+  { "id": "W22", "area": "Seethammadhara", "ward": "Ward 22", "status": "warning", "pressure": 4.1, "leakRisk": "medium", "lastUpdated": "2026-07-31T08:18:00", "lat": 17.7365, "lng": 83.3123 },
+  { "id": "W03", "area": "Kancharapalem", "ward": "Ward 03", "status": "safe", "pressure": 5.0, "leakRisk": "low", "lastUpdated": "2026-07-31T08:05:00", "lat": 17.7089, "lng": 83.2812 },
+  { "id": "W29", "area": "Madhurawada", "ward": "Ward 29", "status": "warning", "pressure": 3.8, "leakRisk": "medium", "lastUpdated": "2026-07-31T08:20:00", "lat": 17.8017, "lng": 83.3789 }
+]

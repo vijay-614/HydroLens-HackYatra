@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GVMC Water Pipeline Monitoring System | Government of Andhra Pradesh</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Leaflet CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body class="dark-theme">
+
+    <!-- Top Official AP Government Header -->
+    <header class="govt-header">
+        <div class="header-container">
+            <div class="govt-brand">
+                <div class="emblem-wrapper">
+                    <i class="fa-solid fa-building-columns govt-emblem-icon"></i>
+                </div>
+                <div class="brand-text">
+                    <span class="govt-sub">GOVERNMENT OF ANDHRA PRADESH</span>
+                    <h1 class="govt-main">GREATER VISAKHAPATNAM MUNICIPAL CORPORATION (GVMC)</h1>
+                    <span class="portal-tag">Smart Water Supply Pipeline Monitoring & Maintenance Operations Portal</span>
+                </div>
+            </div>
+
+            <div class="header-actions">
+                <div class="system-status-chip warning" id="system-status-chip">
+                    <span class="pulse-dot"></span>
+                    <span class="status-lbl">SYSTEM STATUS: 2 ATTENTION NEEDED</span>
+                </div>
+
+                <!-- Notifications Button -->
+                <button class="notif-btn" id="notif-toggle-btn" title="Click to view Top & Critical Issues">
+                    <i class="fa-solid fa-bell"></i>
+                    <span class="notif-badge" id="notif-count">4</span>
+                    <span class="btn-lbl">Notifications</span>
+                </button>
+
+                <div class="time-display" id="live-clock">--:--:-- IST</div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Navigation Bar -->
+    <nav class="main-navbar">
+        <div class="nav-container">
+            <button class="nav-item active" data-tab="map-dashboard">
+                <i class="fa-solid fa-map-location-dot"></i>
+                <span>Geographical Map</span>
+            </button>
+            <button class="nav-item" data-tab="maintenance">
+                <i class="fa-solid fa-screwdriver-wrench"></i>
+                <span>Maintenance</span>
+            </button>
+            <button class="nav-item" data-tab="tank-levels">
+                <i class="fa-solid fa-water"></i>
+                <span>Tank Levels</span>
+            </button>
+            <button class="nav-item" data-tab="pipeline-monitoring">
+                <i class="fa-solid fa-chart-line"></i>
+                <span>Pipeline Monitoring</span>
+            </button>
+            <button class="nav-item" data-tab="citizen-complaints">
+                <i class="fa-solid fa-users-gear"></i>
+                <span>Citizen Complaints</span>
+                <span class="badge-count">13</span>
+            </button>
+
+            <!-- Performance Updates Dropdown / Tab Group -->
+            <div class="nav-dropdown">
+                <button class="nav-item dropdown-btn" id="perf-dropdown-btn" data-tab="perf-daily">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    <span>Performance Updates</span>
+                    <i class="fa-solid fa-chevron-down caret"></i>
+                </button>
+                <div class="dropdown-menu">
+                    <button class="dropdown-item" data-tab="perf-daily">
+                        <i class="fa-solid fa-calendar-day"></i> Daily Performance
+                    </button>
+                    <button class="dropdown-item" data-tab="perf-weekly">
+                        <i class="fa-solid fa-calendar-week"></i> Weekly Performance
+                    </button>
+                    <button class="dropdown-item" data-tab="perf-monthly">
+                        <i class="fa-solid fa-calendar-days"></i> Monthly Performance
+                    </button>
+                </div>
+            </div>
+
+            <button class="nav-item" data-tab="sensors">
+                <i class="fa-solid fa-microchip"></i>
+                <span>Sensors</span>
+            </button>
+
+            <button class="nav-item ai-btn" data-tab="ai-assistant">
+                <i class="fa-solid fa-brain"></i>
+                <span>AI Insights</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Notifications Modal / Side Drawer (Condition 3: Top & Critical Issues) -->
+    <div class="notif-drawer-overlay" id="notif-drawer-overlay"></div>
+    <aside class="notif-drawer" id="notif-drawer">
+        <div class="drawer-header">
+            <div class="drawer-title">
+                <i class="fa-solid fa-triangle-exclamation text-danger"></i>
+                <h3>Top & Critical Issues Notifications</h3>
+            </div>
+            <button class="close-btn" id="close-notif-btn"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+        <div class="drawer-body">
+            <div class="notif-filter-bar">
+                <span class="filter-lbl">Filter Severity:</span>
+                <button class="filter-chip active" data-filter="all">All (4)</button>
+                <button class="filter-chip critical" data-filter="critical">Critical (2)</button>
+                <button class="filter-chip warning" data-filter="warning">Warning (2)</button>
+            </div>
+            <div class="notif-list" id="notif-list-container">
+                <!-- Dynamic via JS -->
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-secondary btn-block" id="acknowledge-all-btn"><i class="fa-solid fa-check-double"></i> Acknowledge All Alerts</button>
+        </div>
+    </aside>
+
+    <!-- Main Container -->
+    <main class="main-content">
+
+        <!-- 1. MAP DASHBOARD PAGE (Preserving Geographical Map Appearance) -->
+        <section id="map-dashboard" class="page-section active">
+            <div class="dashboard-header-bar">
+                <div class="section-title">
+                    <h2><i class="fa-solid fa-map"></i> Visakhapatnam (GVMC) Water Network GIS Map</h2>
+                    <p>Real-time spatial visualization of Yeleru, Raiwada, Mudasarlova, Meghadrigedda & Gosthani trunk lines</p>
+                </div>
+                <div class="map-controls">
+                    <span class="stat-pill"><i class="fa-solid fa-route"></i> Pipelines: <strong>6 Trunk Networks</strong></span>
+                    <span class="stat-pill"><i class="fa-solid fa-tint"></i> Total Supply: <strong>442 MLD</strong></span>
+                    <span class="stat-pill success"><i class="fa-solid fa-circle-check"></i> Grid Health: <strong>94.2%</strong></span>
+                </div>
+            </div>
+
+            <div class="map-layout">
+                <div class="map-container-wrapper">
+                    <div id="gvmc-map"></div>
+                </div>
+                <aside class="map-sidebar">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-triangle-exclamation text-warning"></i> Vizag Issued Networks & Areas</h3>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="network-legend-list" id="network-legend">
+                                <!-- Dynamic JS -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h3><i class="fa-solid fa-gauge-high"></i> Quick Metrics</h3>
+                        </div>
+                        <div class="card-body">
+                            <div class="metric-mini-grid">
+                                <div class="mini-metric">
+                                    <span class="lbl">Avg Pressure</span>
+                                    <span class="val text-cyan">4.2 Bar</span>
+                                </div>
+                                <div class="mini-metric">
+                                    <span class="lbl">Flow Speed</span>
+                                    <span class="val text-emerald">2.1 m/s</span>
+                                </div>
+                                <div class="mini-metric">
+                                    <span class="lbl">Active Leaks</span>
+                                    <span class="val text-danger">3 Locs</span>
+                                </div>
+                                <div class="mini-metric">
+                                    <span class="lbl">NRW Loss</span>
+                                    <span class="val text-warning">14.8%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </aside>
+            </div>
+        </section>
+
+        <!-- 2. MAINTENANCE PAGE (Condition 1: Latest Updates at TOP, Network Details, Averages, Govt Attract CSS) -->
+        <section id="maintenance" class="page-section">
+            
+            <!-- STICKY & TOP MAINTENANCE ANNOUNCEMENTS (STAYS AT TOP AT ANY COST) -->
+            <div class="govt-top-pinned-banner">
+                <div class="pinned-header">
+                    <div class="pinned-badge">
+                        <i class="fa-solid fa-bullhorn"></i> LATEST GVMC MAINTENANCE UPDATES & OFFICIAL ANNOUNCEMENTS
+                    </div>
+                    <span class="pinned-stamp"><i class="fa-solid fa-shield-halved"></i> Official GVMC Directive</span>
+                </div>
+                <div class="pinned-body">
+                    <div class="urgent-update-card">
+                        <div class="card-icon danger"><i class="fa-solid fa-circle-exclamation"></i></div>
+                        <div class="card-content">
+                            <h4>URGENT: Trunk Line Overhaul at Yeleru-Gajuwaka Junction (1400mm Mild Steel)</h4>
+                            <p>Scheduled emergency valve replacement and welding repair underway. Water supply divert active via Kanithi Reservoir bypass line. Expected completion by 22:00 IST today.</p>
+                            <div class="meta-row">
+                                <span><i class="fa-solid fa-clock"></i> Updated: 15 mins ago</span>
+                                <span><i class="fa-solid fa-location-dot"></i> Zone 1 (Gajuwaka Industrial Belt)</span>
+                                <span><i class="fa-solid fa-user-gear"></i> Supervisor: Er. K. V. Rao (EE Water Works)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="urgent-update-card">
+                        <div class="card-icon info"><i class="fa-solid fa-circle-info"></i></div>
+                        <div class="card-content">
+                            <h4>COMPLETED: Mudasarlova Headworks Filter Bed Maintenance</h4>
+                            <p>Routine backwashing and pressure gauge recalibration completed successfully. Normal pressure restored to MVP Colony, Dwaraka Nagar, and Siripuram sectors.</p>
+                            <div class="meta-row">
+                                <span><i class="fa-solid fa-clock"></i> Updated: 2 Hours ago</span>
+                                <span><i class="fa-solid fa-location-dot"></i> Zone 3 (Core Central Vizag)</span>
+                                <span><i class="fa-solid fa-user-gear"></i> Lead Engineer: Er. P. Srimannarayana</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Maintenance Summary Cards -->
+            <div class="stats-row mt-4">
+                <div class="stat-card gold-border">
+                    <div class="stat-icon"><i class="fa-solid fa-calculator text-gold"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-title">Avg Maintenance Response</span>
+                        <span class="stat-value">3.4 Hrs</span>
+                        <span class="stat-sub">Target: < 4.0 Hrs</span>
+                    </div>
+                </div>
+                <div class="stat-card blue-border">
+                    <div class="stat-icon"><i class="fa-solid fa-sliders text-cyan"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-title">Preventive vs Breakdown</span>
+                        <span class="stat-value">82% / 18%</span>
+                        <span class="stat-sub">GVMC Standard Compliant</span>
+                    </div>
+                </div>
+                <div class="stat-card green-border">
+                    <div class="stat-icon"><i class="fa-solid fa-clock-rotate-left text-emerald"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-title">Mean Time Between Failure</span>
+                        <span class="stat-value">48.5 Days</span>
+                        <span class="stat-sub">+6.2% Improvement YoY</span>
+                    </div>
+                </div>
+                <div class="stat-card purple-border">
+                    <div class="stat-icon"><i class="fa-solid fa-ruler-combined text-purple"></i></div>
+                    <div class="stat-data">
+                        <span class="stat-title">Replaced Pipeline (2026)</span>
+                        <span class="stat-value">14.2 km</span>
+                        <span class="stat-sub">Ductile Iron & HDPE</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- GVMC Pipeline Networks & Detailed Maintenance Status Table -->
+            <div class="card mt-4">
+                <div class="card-header space-between">
+                    <h3><i class="fa-solid fa-network-wired"></i> GVMC Vizag Pipeline Networks - Maintenance Details & Averages</h3>
+                    <button class="btn btn-sm btn-outline"><i class="fa-solid fa-file-export"></i> Export Report</button>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Network Name & Zone</th>
+                                    <th>Pipe Diameter & Material</th>
+                                    <th>Coverage Area</th>
+                                    <th>Avg Maint Cycle</th>
+                                    <th>Last Inspected</th>
+                                    <th>Maint Health</th>
+                                    <th>Current Status</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="maint-table-body">
+                                <!-- Dynamic via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3. TANK LEVELS PAGE (Condition 1: Details with Tank Levels Inclusion & Performance Updates) -->
+        <section id="tank-levels" class="page-section">
+            <div class="section-title">
+                <h2><i class="fa-solid fa-water"></i> GVMC Water Network Reservoirs & Tank Levels</h2>
+                <p>Real-time storage levels, capacity utilization, inflow/outflow balance for all Vizag supply networks</p>
+            </div>
+
+            <!-- Tank Overview Cards Grid -->
+            <div class="tank-grid mt-4" id="tank-grid-container">
+                <!-- Dynamic via JS -->
+            </div>
+
+            <!-- Detailed Networks Tank Performance Table -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-database"></i> Pipeline Networks Storage & Tank Level Integration</h3>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Network & Source</th>
+                                    <th>Primary Storage Tank</th>
+                                    <th>Tank Capacity (KL)</th>
+                                    <th>Current Level (%)</th>
+                                    <th>Water Volume (KL)</th>
+                                    <th>Inflow Rate (L/s)</th>
+                                    <th>Outflow Rate (L/s)</th>
+                                    <th>Tank Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tank-table-body">
+                                <!-- Dynamic via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 4. PIPELINE MONITORING PAGE (Condition 1: Details with Graph Structures) -->
+        <section id="pipeline-monitoring" class="page-section">
+            <div class="section-title">
+                <h2><i class="fa-solid fa-chart-line"></i> GVMC Pipeline Monitoring & Network Graph Analytics</h2>
+                <p>Live telemetry graphs, flow rate distributions, pressure monitoring & node structural graphs</p>
+            </div>
+
+            <!-- Graph Layout Grid -->
+            <div class="graphs-grid mt-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-wave-square"></i> Real-time Flow Rate Comparison (Liters/Sec)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="flowRateChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-gauge"></i> Pressure Variance across Networks (Bar)</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-container">
+                            <canvas id="pressureChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visual Node Network Flow Structure -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-diagram-project"></i> Vizag Pipeline Network Flow Topology</h3>
+                </div>
+                <div class="card-body">
+                    <div class="topology-diagram" id="topology-container">
+                        <!-- Rendered by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 5. CITIZEN COMPLAINTS PAGE (Condition 1: Top 13 Citizen Complaints from Google/Vizag) -->
+        <section id="citizen-complaints" class="page-section">
+            <div class="section-title space-between">
+                <div>
+                    <h2><i class="fa-solid fa-users-gear"></i> GVMC Citizen Grievance Portal - Top 13 Complaints</h2>
+                    <p>Live citizen complaints logged via GVMC Toll-Free (1800-4250-0009), Spandana & Google Portal</p>
+                </div>
+                <div class="complaint-stats">
+                    <span class="pill danger">3 Critical</span>
+                    <span class="pill warning">6 In Progress</span>
+                    <span class="pill success">4 Resolved</span>
+                </div>
+            </div>
+
+            <div class="filter-search-bar mt-3">
+                <div class="search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="complaint-search" placeholder="Search by Complaint ID, Ward, Locality or Issue...">
+                </div>
+                <div class="filter-dropdowns">
+                    <select id="complaint-status-filter">
+                        <option value="all">All Statuses</option>
+                        <option value="Critical">Critical</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Resolved">Resolved</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="complaint-cards-grid mt-3" id="complaints-grid">
+                <!-- Dynamic 13 Complaints JS -->
+            </div>
+        </section>
+
+        <!-- 6. DAILY PERFORMANCE PAGE (Condition 2) -->
+        <section id="perf-daily" class="page-section">
+            <div class="section-title">
+                <h2><i class="fa-solid fa-calendar-day"></i> Daily Performance Update Report</h2>
+                <p>24-Hour telemetry snapshot, daily water production, pump operational metrics & hourly demand curve</p>
+            </div>
+
+            <div class="stats-row mt-4">
+                <div class="stat-card">
+                    <span class="stat-title">Daily Supply Volume</span>
+                    <span class="stat-value text-cyan">442 MLD</span>
+                    <span class="stat-sub">Target: 440 MLD (100.4%)</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Peak Demand Hour</span>
+                    <span class="stat-value text-gold">06:00 - 09:00 AM</span>
+                    <span class="stat-sub">Max Flow: 18,400 L/s</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Daily NRW Loss</span>
+                    <span class="stat-value text-danger">14.8%</span>
+                    <span class="stat-sub">Estimated 65.4 MLD</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Pump Uptime Today</span>
+                    <span class="stat-value text-emerald">23.2 Hrs</span>
+                    <span class="stat-sub">Efficiency: 96.6%</span>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-chart-area"></i> Today's Hourly Water Distribution Flow (MLD)</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-lg">
+                        <canvas id="dailyFlowChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 7. WEEKLY PERFORMANCE PAGE (Condition 2) -->
+        <section id="perf-weekly" class="page-section">
+            <div class="section-title">
+                <h2><i class="fa-solid fa-calendar-week"></i> Weekly Performance Update Report</h2>
+                <p>7-Day operational aggregate, maintenance ticket throughput, weekly zonal water equity index</p>
+            </div>
+
+            <div class="stats-row mt-4">
+                <div class="stat-card">
+                    <span class="stat-title">Weekly Total Distributed</span>
+                    <span class="stat-value text-cyan">3,094 ML</span>
+                    <span class="stat-sub">Avg 442 MLD/day</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Supply Schedule Adherence</span>
+                    <span class="stat-value text-emerald">96.4%</span>
+                    <span class="stat-sub">Across 98 GVMC Wards</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Maint Tasks Closed</span>
+                    <span class="stat-value text-gold">47 / 52</span>
+                    <span class="stat-sub">90.3% Resolution Rate</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Water Quality Index</span>
+                    <span class="stat-value text-purple">98.2%</span>
+                    <span class="stat-sub">Turbidity & Chlorine OK</span>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-chart-bar"></i> 7-Day Network Wise Supply Trend</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-lg">
+                        <canvas id="weeklyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8. MONTHLY PERFORMANCE PAGE (Condition 2) -->
+        <section id="perf-monthly" class="page-section">
+            <div class="section-title">
+                <h2><i class="fa-solid fa-calendar-days"></i> Monthly Performance Update Report</h2>
+                <p>30-Day executive overview, power efficiency ratio, NRW reduction trend & capital maintenance summary</p>
+            </div>
+
+            <div class="stats-row mt-4">
+                <div class="stat-card">
+                    <span class="stat-title">Monthly Total Supply</span>
+                    <span class="stat-value text-cyan">13,260 ML</span>
+                    <span class="stat-sub">July 2026 Aggregate</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Energy Consumption</span>
+                    <span class="stat-value text-gold">1.42 kWh / KL</span>
+                    <span class="stat-sub">Efficiency Goal Achieved</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">NRW Reduction vs Last Mo</span>
+                    <span class="stat-value text-emerald">-2.3%</span>
+                    <span class="stat-sub">Leakage Control Active</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">System Reliability Rating</span>
+                    <span class="stat-value text-purple">99.1%</span>
+                    <span class="stat-sub">Zero Major Grid Outages</span>
+                </div>
+            </div>
+
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-chart-line"></i> 30-Day Water Supply & Loss Trend</h3>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container-lg">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 9. AI INSIGHTS PAGE -->
+        <section id="ai-assistant" class="page-section">
+            <div class="section-title">
+                <h2><i class="fa-solid fa-brain text-purple"></i> GVMC AI Leakage Prediction & Smart Operations</h2>
+                <p>Machine learning analytics for predictive maintenance, pressure optimization & automated anomaly detection</p>
+            </div>
+
+            <div class="ai-grid mt-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-microchip"></i> Predictive Maintenance AI Alert</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="ai-insight-box danger-glow">
+                            <div class="ai-head">
+                                <i class="fa-solid fa-robot"></i>
+                                <span>High Risk Anomaly Detected (92% Confidence)</span>
+                            </div>
+                            <p>Pressure transient pattern in <strong>Raiwada Trunk Main (Section 3 - Gopalapatnam)</strong> indicates micro-fracture acoustic signature. Recommended maintenance within 48 hours to prevent sudden burst.</p>
+                            <div class="ai-actions">
+                                <button class="btn btn-sm btn-danger"><i class="fa-solid fa-wrench"></i> Dispatch Work Order</button>
+                                <button class="btn btn-sm btn-outline"><i class="fa-solid fa-magnifying-glass-chart"></i> View Telemetry</button>
+                            </div>
+                        </div>
+
+                        <div class="ai-insight-box success-glow mt-3">
+                            <div class="ai-head">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                                <span>Pump Energy Optimization Recommendation</span>
+                            </div>
+                            <p>Shifting Mudasarlova Pumping Station shift #2 by 45 minutes will utilize off-peak tariff rate, saving approx. ₹1.2 Lakhs monthly on electricity costs.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-comments"></i> GVMC Water AI Assistant Query</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="chat-box">
+                            <div class="chat-messages" id="chat-messages">
+                                <div class="chat-msg bot">
+                                    <i class="fa-solid fa-robot avatar"></i>
+                                    <div class="msg-content">
+                                        Namaste! I am the GVMC Water Operations AI. How can I assist you with Vizag pipeline networks, tank levels, or maintenance schedules today?
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="chat-input-bar">
+                                <input type="text" id="chat-input" placeholder="Ask AI e.g. 'Show Yeleru line pressure' or 'Which tank is low?'...">
+                                <button id="send-chat-btn" class="btn btn-primary"><i class="fa-solid fa-paper-plane"></i></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 10. SENSORS MANAGEMENT PAGE -->
+        <section id="sensors" class="page-section">
+            <div class="section-title space-between">
+                <div>
+                    <h2><i class="fa-solid fa-microchip text-cyan"></i> GVMC IoT Sensors Telemetry & Configurations</h2>
+                    <p>Real-time telemetry, configuration thresholds, and live diagnostics for Pressure, Flow, Vibration, and Ultrasonic sensor networks</p>
+                </div>
+                <div class="sensor-header-actions">
+                    <button class="btn btn-sm btn-outline" id="trigger-recal-btn"><i class="fa-solid fa-arrows-rotate"></i> Recalibrate All Sensors</button>
+                </div>
+            </div>
+
+            <!-- Sensor Metric Stats -->
+            <div class="stats-row mt-4">
+                <div class="stat-card">
+                    <span class="stat-title">Total Active Sensors</span>
+                    <span class="stat-value text-cyan" id="total-sensors-count">16 Devices</span>
+                    <span class="stat-sub">Across 6 GVMC Zones</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Telemetry Uptime</span>
+                    <span class="stat-value text-emerald">99.4%</span>
+                    <span class="stat-sub">LoRaWAN & 4G Gateway</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Attention / Warning</span>
+                    <span class="stat-value text-warning" id="warning-sensors-count">4 Warning / 2 Critical</span>
+                    <span class="stat-sub">Threshold Deviations</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-title">Avg Battery & Signal</span>
+                    <span class="stat-value text-purple">91% / 88%</span>
+                    <span class="stat-sub">Optimal Health</span>
+                </div>
+            </div>
+
+            <!-- Sensor Type Filter Tabs -->
+            <div class="sensor-type-nav mt-4">
+                <button class="sensor-type-btn active" data-sensortype="all">
+                    <i class="fa-solid fa-list-check"></i> All Sensors (16)
+                </button>
+                <button class="sensor-type-btn" data-sensortype="Pressure Sensors">
+                    <i class="fa-solid fa-gauge"></i> Pressure Sensors
+                </button>
+                <button class="sensor-type-btn" data-sensortype="Flow Sensors">
+                    <i class="fa-solid fa-water"></i> Flow Sensors
+                </button>
+                <button class="sensor-type-btn" data-sensortype="Vibration Sensors">
+                    <i class="fa-solid fa-wave-square"></i> Vibration Sensors
+                </button>
+                <button class="sensor-type-btn" data-sensortype="Ultrasonic Sensors">
+                    <i class="fa-solid fa-tower-broadcast"></i> Ultrasonic Sensors
+                </button>
+            </div>
+
+            <!-- Filter & Search Controls -->
+            <div class="filter-search-bar mt-3">
+                <div class="search-input">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" id="sensor-search" placeholder="Search by Sensor ID, Name, Zone, or Ward...">
+                </div>
+                <div class="filter-dropdowns">
+                    <select id="sensor-status-filter">
+                        <option value="all">All Statuses</option>
+                        <option value="optimal">Optimal</option>
+                        <option value="warning">Warning</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Detailed Sensor Type Specific Views Grid -->
+            <div class="sensor-detail-grid mt-4">
+                <!-- Pressure View Card -->
+                <div class="card sensor-type-card" id="pressure-sensor-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-gauge text-cyan"></i> Pressure Sensors Configuration View</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Monitors hydraulic line pressure in Bar across primary trunk mains to detect pressure drops, bursts, and air locks.</p>
+                        <div class="sensor-config-box">
+                            <div class="config-row">
+                                <span>Default Pressure Safety Limit:</span>
+                                <strong>3.0 Bar - 6.0 Bar</strong>
+                            </div>
+                            <div class="config-row">
+                                <span>High Pressure Surge Shutdown:</span>
+                                <span class="status-badge optimal">Enabled (6.5 Bar)</span>
+                            </div>
+                            <div class="config-row">
+                                <span>Telemetry Sample Interval:</span>
+                                <select class="sensor-config-select">
+                                    <option>5 Seconds</option>
+                                    <option>10 Seconds</option>
+                                    <option>30 Seconds</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Flow View Card -->
+                <div class="card sensor-type-card" id="flow-sensor-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-water text-emerald"></i> Flow Sensors Configuration View</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Tracks volumetric water flow rates in Liters/Sec (L/s) to calculate mass balance and identify non-revenue water loss.</p>
+                        <div class="sensor-config-box">
+                            <div class="config-row">
+                                <span>Flowmeter Measurement Tech:</span>
+                                <strong>Electromagnetic & Ultrasonic</strong>
+                            </div>
+                            <div class="config-row">
+                                <span>NRW Loss Detection Sensitivity:</span>
+                                <span class="status-badge optimal">High (± 1.5%)</span>
+                            </div>
+                            <div class="config-row">
+                                <span>Flow Sampling Interval:</span>
+                                <select class="sensor-config-select">
+                                    <option>5 Seconds</option>
+                                    <option>15 Seconds</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vibration View Card -->
+                <div class="card sensor-type-card" id="vibration-sensor-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-wave-square text-gold"></i> Vibration Sensors Configuration View</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Measures tri-axial mechanical vibration (mm/s) on heavy pumping station impellers and motor bearings to prevent mechanical failure.</p>
+                        <div class="sensor-config-box">
+                            <div class="config-row">
+                                <span>Vibration Alarm Threshold:</span>
+                                <strong>> 4.5 mm/s (ISO 10816-3)</strong>
+                            </div>
+                            <div class="config-row">
+                                <span>Bearing FFT Frequency Analysis:</span>
+                                <span class="status-badge warning">2 Warnings Active</span>
+                            </div>
+                            <div class="config-row">
+                                <span>Sampling Rate:</span>
+                                <select class="sensor-config-select">
+                                    <option>Continuous (Real-time)</option>
+                                    <option>1 Minute</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Ultrasonic View Card -->
+                <div class="card sensor-type-card" id="ultrasonic-sensor-card">
+                    <div class="card-header">
+                        <h3><i class="fa-solid fa-tower-broadcast text-purple"></i> Ultrasonic Sensors Configuration View</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted">Non-contact acoustic & ultrasonic distance sensors for tank level monitoring (% capacity) and channel velocity profiling.</p>
+                        <div class="sensor-config-box">
+                            <div class="config-row">
+                                <span>Ultrasonic Transducer Range:</span>
+                                <strong>0.3m - 15.0m Depth</strong>
+                            </div>
+                            <div class="config-row">
+                                <span>Temperature Compensation:</span>
+                                <span class="status-badge optimal">Active (28.5 °C)</span>
+                            </div>
+                            <div class="config-row">
+                                <span>Echo Filter Noise Threshold:</span>
+                                <select class="sensor-config-select">
+                                    <option>Adaptive DSP</option>
+                                    <option>High Noise Suppress</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sensors Cards & Table View Container -->
+            <div class="card mt-4">
+                <div class="card-header space-between">
+                    <h3 id="sensor-table-heading"><i class="fa-solid fa-sliders"></i> Sensor Telemetry Inventory & Live Readings</h3>
+                    <div style="font-size: 0.85rem; color: #94a3b8;">
+                        <i class="fa-solid fa-circle-dot text-emerald"></i> Telemetry Active
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="styled-table">
+                            <thead>
+                                <tr>
+                                    <th>Sensor ID & Name</th>
+                                    <th>Sensor Type</th>
+                                    <th>Zone & Location</th>
+                                    <th>Current Value</th>
+                                    <th>Operating Limits</th>
+                                    <th>Status</th>
+                                    <th>Battery & Signal</th>
+                                    <th>Last Calibrated</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="sensor-table-body">
+                                <!-- Dynamic JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="govt-footer">
+        <div class="footer-container">
+            <p>&copy; 2026 Greater Visakhapatnam Municipal Corporation (GVMC), Andhra Pradesh. All Rights Reserved.</p>
+            <p class="footer-sub">Smart Cities Mission | Department of Municipal Administration & Urban Development (MA&UD)</p>
+        </div>
+    </footer>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    
+    <!-- Custom JS -->
+    <script src="app.js"></script>
+</body>
+</html>
