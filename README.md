@@ -1,4 +1,4 @@
-# 💧 HydroLens
+# HydroLens💧
 
 ### AI-Powered Smart Water Supply Pipeline Monitoring & Maintenance Platform
 
@@ -87,6 +87,9 @@ This allows operators to move from **reactive maintenance** toward **data-driven
 
 Provides a spatial visualization of the water distribution network.
 
+<img src="images/h01.png" width="1000">
+
+
 ### Features
 
 * GIS-based pipeline visualization
@@ -105,6 +108,7 @@ The map provides operators with a quick overview of the current state of the net
 
 The maintenance module provides an operational view of network maintenance activities.
 
+<img src="images/h02.png" width="1000">
 ### Features
 
 * Latest maintenance updates
@@ -125,6 +129,7 @@ The objective is to help authorities prioritize maintenance based on network con
 
 HydroLens monitors storage levels across major water reservoirs and storage facilities.
 
+<img src="images/h03.png" width="1000">
 ### Monitored Parameters
 
 * Current storage level
@@ -159,6 +164,7 @@ This enables operators to identify potential **overflow, shortage, and supply im
 
 The pipeline monitoring module provides network-level operational analytics.
 
+<img src="images/h04.png" width="1000">
 ### Capabilities
 
 * Flow-rate monitoring
@@ -177,6 +183,7 @@ HydroLens can use these parameters to identify potential leakage or abnormal net
 
 Citizen complaints are integrated into the same operational environment.
 
+<img src="images/h05.png" width="1000">
 ### Features
 
 * Complaint ID tracking
@@ -205,6 +212,7 @@ This creates a connection between **citizen-reported problems and network-level 
 
 HydroLens provides a centralized interface for monitoring water-network sensors.
 
+<img src="images/h06.png" width="1000">
 ### Supported Sensor Categories
 
 * Pressure sensors
@@ -234,6 +242,7 @@ This module is designed to support future integration with real-world IoT deploy
 
 The AI module is the intelligence layer of HydroLens.
 
+<img src="images/h07.png" width="1000">
 It is designed for:
 
 ### Predictive Maintenance
